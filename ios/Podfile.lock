@@ -95,6 +95,8 @@ PODS:
   - fluttertoast (0.0.2):
     - Flutter
     - Toast
+  - gallery_saver (0.0.1):
+    - Flutter
   - geolocator_apple (1.2.0):
     - Flutter
   - google_maps_flutter_ios (0.0.1):
@@ -202,6 +204,7 @@ DEPENDENCIES:
   - flutter_downloader (from `.symlinks/plugins/flutter_downloader/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
+  - gallery_saver (from `.symlinks/plugins/gallery_saver/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
@@ -264,6 +267,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   fluttertoast:
     :path: ".symlinks/plugins/fluttertoast/ios"
+  gallery_saver:
+    :path: ".symlinks/plugins/gallery_saver/ios"
   geolocator_apple:
     :path: ".symlinks/plugins/geolocator_apple/ios"
   google_maps_flutter_ios:
@@ -316,6 +321,7 @@ SPEC CHECKSUMS:
   flutter_downloader: b7301ae057deadd4b1650dc7c05375f10ff12c39
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   fluttertoast: 9f2f8e81bb5ce18facb9748d7855bf5a756fe3db
+  gallery_saver: 9fc173c9f4fcc48af53b2a9ebea1b643255be542
   geolocator_apple: 9bcea1918ff7f0062d98345d238ae12718acfbc1
   google_maps_flutter_ios: abdac20d6ce8931f6ebc5f46616df241bfaa2cfd
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a

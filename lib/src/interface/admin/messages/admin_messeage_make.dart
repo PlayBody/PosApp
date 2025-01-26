@@ -21,7 +21,7 @@ import 'package:staff_pos_app/src/interface/admin/users/admin_user_info.dart';
 import 'package:staff_pos_app/src/interface/components/loadwidgets.dart';
 import 'package:staff_pos_app/src/model/messagemodel.dart';
 import 'package:path/path.dart' as path;
-// only IOS import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 
 import '../../../common/globals.dart' as globals;
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -127,7 +127,7 @@ class _AdminMesseageMake extends State<AdminMesseageMake> {
       if (item.status == DownloadTaskStatus.complete) {
         String tempPath = '${item.savedDir}/${item.filename!}';
         File(tempPath).setLastModified(DateTime.now());
-        /* only IOS
+        // only IOS
         if (Platform.isIOS) {
           // String tempPath = item.savedDir + '/' + item.filename!;
           var ext = path.extension(tempPath);
@@ -138,7 +138,7 @@ class _AdminMesseageMake extends State<AdminMesseageMake> {
           if (['.mov', '.mp4', '.avi'].contains(ext.toLowerCase())) {
             await GallerySaver.saveVideo(tempPath);
           }
-        }*/
+        }
         Fluttertoast.showToast(msg: 'ダウンロードされました。- ${item.filename}');
       }
 
