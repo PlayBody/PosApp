@@ -18,6 +18,5 @@ samples, guidance on mobile development, and a full API reference.
 
 ```bash
 keytool -genkey -v -keystore pos_app.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
-keytool -importkeystore -srckeystore pos_app.keystore -destkeystore pos_app.p12 -deststoretype PKCS12 -srcalias my-key-alias
-openssl pkcs12 -in pos_app.p12 -out pos_app.pem -nodes
+keytool -export -rfc -keystore pos_app.keystore -alias my-key-alias -file pos_app.pem
 ```
