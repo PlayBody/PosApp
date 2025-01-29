@@ -73,7 +73,9 @@ class _AdminHome extends State<AdminHome> {
     shiftOrgans = await ClOrgan()
         .loadOrganHaveShiftMode(context, globals.companyId, globals.staffId);
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return [];
   }
 
