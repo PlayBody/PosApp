@@ -55,6 +55,16 @@ class _Order extends State<Order> {
     loadData = loadOrderData();
   }
 
+  Future<List> loadUpdateCategoryData() async {
+    menuList = await ClMenu().loadMenuList(context, {
+      'organ_id': globals.organId,
+      'category_id': selCategory == "0" ? "" : selCategory
+    });
+
+    setState(() {});
+    return menuList;
+  }
+
   Future<List> loadOrderData() async {
     OrganModel organ = await ClOrgan().loadOrganInfo(context, globals.organId);
     categories = await ClCategory().getCategoryList(context, organ.companyId);
@@ -165,10 +175,15 @@ class _Order extends State<Order> {
       });
     });
     globals.orderMenus.forEach((e) {
-      if(data.any((element) => element['menu_id'] == e.menuId && element['variation_id'] == e.variationId)) {
+      if (data.any((element) =>
+          element['menu_id'] == e.menuId &&
+          element['variation_id'] == e.variationId)) {
         data.forEach((element) {
-          if(element['menu_id'] == e.menuId && element['variation_id'] == e.variationId) {
-            element['quantity'] = (int.parse(element['quantity']) + int.parse(e.quantity)).toString();
+          if (element['menu_id'] == e.menuId &&
+              element['variation_id'] == e.variationId) {
+            element['quantity'] =
+                (int.parse(element['quantity']) + int.parse(e.quantity))
+                    .toString();
           }
         });
         return;
@@ -352,7 +367,8 @@ class _Order extends State<Order> {
                           registerOrderMenu();
                         },
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(17, 127, 193, 1),
+                            backgroundColor:
+                                const Color.fromRGBO(17, 127, 193, 1),
                             elevation: 0,
                             padding:
                                 EdgeInsets.all(globals.isWideScreen ? 15 : 4),
@@ -503,7 +519,7 @@ class _Order extends State<Order> {
         tapFunc: (v) async {
           selCategory = v.toString();
           Dialogs().loaderDialogNormal(context);
-          await loadOrderData();
+          await loadUpdateCategoryData();
           Navigator.pop(context);
         });
   }
