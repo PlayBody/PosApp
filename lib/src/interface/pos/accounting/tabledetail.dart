@@ -201,6 +201,13 @@ class _TableDetail extends State<TableDetail> {
     }
   }
 
+  Future<void> changeQuantityOrderMenu(String? _id, String? _quantity) async {
+    if (_id == null || _quantity == null) return;
+    bool isUpdate =
+        await ClOrder().changeQuantityOrderMenu(context, _id, _quantity);
+    if (isUpdate) refreshLoad();
+  }
+
   void titleChangeDialog(String txtInputTitle) {
     final _controller = TextEditingController();
 
@@ -334,6 +341,12 @@ class _TableDetail extends State<TableDetail> {
                                                   rowNm: menuList.indexOf(e),
                                                   onTap: () =>
                                                       deleteTableMenu(e.id!),
+                                                  onQuantityChanged:
+                                                      (OrderMenuModel item,
+                                                          String newQuantity) {
+                                                    changeQuantityOrderMenu(
+                                                        e.id!, newQuantity);
+                                                  },
                                                 )),
                                           ],
                                         ),
@@ -427,6 +440,14 @@ class _TableDetail extends State<TableDetail> {
                                                   rowNm: menuList.indexOf(e),
                                                   onTap: () =>
                                                       deleteTableMenu(e.id!),
+                                                  onQuantityChanged:
+                                                      (OrderMenuModel item,
+                                                          String newQuantity) {
+                                                    print(
+                                                        'newQuantity: $newQuantity, ${e.id}');
+                                                    changeQuantityOrderMenu(
+                                                        e.id!, newQuantity);
+                                                  },
                                                 )),
                                           ],
                                         ),
@@ -728,9 +749,14 @@ class TableDetailItemList extends StatelessWidget {
   final item;
   final rowNm;
   final GestureTapCallback? onTap;
+  final Function(OrderMenuModel, String)? onQuantityChanged;
 
   const TableDetailItemList(
-      {required this.item, required this.rowNm, this.onTap, Key? key})
+      {required this.item,
+      required this.rowNm,
+      this.onTap,
+      this.onQuantityChanged,
+      Key? key})
       : super(key: key);
 
   @override
@@ -762,14 +788,20 @@ class TableDetailItemList extends StatelessWidget {
                           fontSize: globals.isWideScreen ? 20 : 16,
                           color: Color.fromRGBO(70, 88, 134, 1),
                           fontWeight: FontWeight.bold)),
-                  Container(
-                    width: 30,
-                    alignment: Alignment.centerRight,
-                    child: Text(item.quantity,
-                        style: TextStyle(
-                            fontSize: globals.isWideScreen ? 20 : 16,
-                            color: Color.fromRGBO(70, 88, 134, 1),
-                            fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      _showQuantityDialog(context, item);
+                    },
+                    child: Container(
+                      width: 30,
+                      alignment: Alignment.centerRight,
+                      child: Text(item.quantity,
+                          style: TextStyle(
+                              fontSize: globals.isWideScreen ? 20 : 16,
+                              color: Color.fromRGBO(70, 88, 134, 1),
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline)),
+                    ),
                   ),
                 ],
               ),
@@ -793,6 +825,114 @@ class TableDetailItemList extends StatelessWidget {
             ),
           ],
         ));
+  }
+
+  void _showQuantityDialog(BuildContext context, OrderMenuModel item) {
+    String quantity = item.quantity;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('数量変更'),
+          content: Container(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(item.menuTitle,
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    quantity,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 15),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (int i = 1; i <= 9; i++)
+                      _buildNumberButton(context, i.toString(), () {
+                        quantity = quantity == '0'
+                            ? i.toString()
+                            : quantity + i.toString();
+                      }),
+                    _buildNumberButton(context, '0', () {
+                      quantity = quantity == '0' ? '0' : quantity + '0';
+                    }),
+                    _buildNumberButton(context, 'C', () {
+                      quantity = '0';
+                    }),
+                    _buildNumberButton(context, '⌫', () {
+                      quantity = quantity.length > 1
+                          ? quantity.substring(0, quantity.length - 1)
+                          : '0';
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('保存'),
+              onPressed: () {
+                if (onQuantityChanged != null &&
+                    quantity != item.quantity &&
+                    quantity != '0') {
+                  onQuantityChanged!(item, quantity);
+                  Navigator.of(context).pop();
+                } else {
+                  Dialogs().infoDialog(context, '数量を入力してください');
+                }
+              },
+            ),
+            TextButton(
+              child: const Text('キャンセル'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNumberButton(
+      BuildContext context, String label, VoidCallback onPressed) {
+    return InkWell(
+      onTap: () {
+        onPressed();
+        (context as Element).markNeedsBuild();
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: label == 'C'
+              ? Colors.red.shade100
+              : (label == '⌫' ? Colors.orange.shade100 : Colors.blue.shade100),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
   }
 }
 

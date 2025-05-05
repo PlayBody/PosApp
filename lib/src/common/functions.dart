@@ -167,7 +167,7 @@ class Funcs {
 
   String currencyFormat(String param) {
     var f = NumberFormat(",###", "en_US");
-    return f.format(int.parse(param));
+    return f.format(double.parse(param));
   }
 
   int clacDistance(LatLng pos1, LatLng pos2) {

@@ -135,11 +135,7 @@ class _SumSaleItemView extends State<SumSaleItemView> {
                                   ...menuList.map((e) => SumSaleItemViewListRow(
                                         label: e.menuTitle,
                                         quantity: e.quantity,
-                                        val: '￥' +
-                                            Funcs().currencyFormat(
-                                                (double.parse(e.menuPrice) *  (1+int.parse(e.menuTax)/100) *
-                                                        int.parse(e.quantity)).toInt()
-                                                    .toString()),
+                                        val: '￥' + Funcs().currencyFormat(calculateMenuPrice(e)),
                                       ))
                                 ],
                               )))),
@@ -166,6 +162,19 @@ class _SumSaleItemView extends State<SumSaleItemView> {
     );
   }
 
+  String calculateMenuPrice(OrderMenuModel menu) {
+    if (menu.menuPrice.isEmpty || menu.menuTax.isEmpty || menu.quantity.isEmpty) {
+      return '0';
+    }
+    
+    double price = double.tryParse(menu.menuPrice) ?? 0;
+    double tax = double.tryParse(menu.menuTax) ?? 0;
+    int quantity = int.tryParse(menu.quantity) ?? 1;
+    
+    int totalPrice = (price * (1 + tax / 100) * quantity).toInt();
+    return totalPrice.toString();
+  }
+
   Future<List> loadSaleData() async {
     Map<dynamic, dynamic> results = {};
     await Webservice().loadHttp(context, apiLoadSumSaleItemUrl,
@@ -179,24 +188,28 @@ class _SumSaleItemView extends State<SumSaleItemView> {
       startTime = order['from_time'];
       endTime = order['to_time'];
 
-      tableAmount = double.parse(order['amount'].toString()).toInt() > 0
-          ? '￥' +
-              Funcs().currencyFormat(
-                  double.parse(order['amount'].toString()).toInt().toString())
+      double orderAmount = order['amount'] == null ? 0 : double.tryParse(order['amount'].toString()) ?? 0;
+      tableAmount = orderAmount > 0
+          ? '￥' + Funcs().currencyFormat(orderAmount.toInt().toString())
           : '';
-      tableChargeAmount = order['charge_amount'] == null ||
-              double.parse(order['charge_amount']).toInt() == 0
+          
+      double chargeAmount = 0;
+      if (order['charge_amount'] != null) {
+        chargeAmount = double.tryParse(order['charge_amount'].toString()) ?? 0;
+      }
+      tableChargeAmount = chargeAmount == 0
           ? ''
-          : '￥' +
-              Funcs().currencyFormat(
-                  double.parse(order['charge_amount']).toInt().toString());
-      setAmount = order['set_amount'] == null ||
-              double.parse(order['set_amount']).toInt() == 0
+          : '￥' + Funcs().currencyFormat(chargeAmount.toInt().toString());
+          
+      double setAmountValue = 0;
+      if (order['set_amount'] != null) {
+        setAmountValue = double.tryParse(order['set_amount'].toString()) ?? 0;
+      }
+      setAmount = setAmountValue == 0
           ? ''
-          : '￥' +
-              Funcs().currencyFormat(
-                  double.parse(order['set_amount']).toInt().toString());
-      if (order['service_amount']!=null) serviceAmount = order['service_amount'].toString();
+          : '￥' + Funcs().currencyFormat(setAmountValue.toInt().toString());
+          
+      if (order['service_amount'] != null) serviceAmount = order['service_amount'].toString();
 
       userCnt = order['user_count'] == null ? '1' : order['user_count'].toString();
       menuList = [];

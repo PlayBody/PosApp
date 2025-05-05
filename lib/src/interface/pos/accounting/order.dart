@@ -18,6 +18,7 @@ import 'package:staff_pos_app/src/interface/pos/accounting/dlgmenureserve.dart';
 import 'package:staff_pos_app/src/interface/pos/accounting/tabledetail.dart';
 import 'package:staff_pos_app/src/model/category_model.dart';
 import 'package:staff_pos_app/src/model/menuvariationmodel.dart';
+import 'package:staff_pos_app/src/model/order_menu_model.dart';
 
 import 'package:euc/jis.dart';
 import 'package:staff_pos_app/src/model/order_model.dart';
@@ -290,8 +291,8 @@ class _Order extends State<Order> {
                   ? 3
                   : 2,
           crossAxisSpacing: globals.isWideScreen ? 40 : 25,
-          mainAxisSpacing: globals.isWideScreen ? 40 : 25,
-          childAspectRatio: globals.isWideScreen ? 0.85 : 0.9,
+          mainAxisSpacing: globals.isWideScreen ? 15 : 10,
+          childAspectRatio: globals.isWideScreen ? 1.2 : 1.3,
           children: [
             ...menuList.map((e) => _getMenuItems(e)),
             if (globals.auth > constAuthGuest)
@@ -446,6 +447,27 @@ class _Order extends State<Order> {
           });
         }
       },
+      onQuantityChanged: (OrderMenuModel item, String newQuantity) {
+        setState(() {
+          final index = globals.orderMenus.indexOf(item);
+          if (index >= 0) {
+            // Create a new OrderMenuModel with updated quantity
+            final updatedItem = OrderMenuModel(
+              id: item.id,
+              menuTitle: item.menuTitle,
+              quantity: newQuantity,
+              menuPrice: item.menuPrice,
+              menuTax: item.menuTax,
+              menuId: item.menuId,
+              variationId: item.variationId,
+              useTickets: item.useTickets,
+            );
+
+            // Replace the item in the list
+            globals.orderMenus[index] = updatedItem;
+          }
+        });
+      },
     );
   }
 
@@ -466,13 +488,13 @@ class _Order extends State<Order> {
               Expanded(
                   child: Stack(
                 children: [
-                  Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Image.asset(
-                        'images/icon_order_calculator.png',
-                        scale: globals.isWideScreen ? 1.1 : 1.8,
-                      )),
+                  // Positioned(
+                  //     right: 0,
+                  //     top: 0,
+                  //     child: Image.asset(
+                  //       'images/icon_order_calculator.png',
+                  //       scale: globals.isWideScreen ? 1.1 : 1.8,
+                  //     )),
                   Positioned.fill(
                     child: Container(
                         alignment: Alignment.center,
@@ -529,9 +551,14 @@ class OrderItemList extends StatelessWidget {
   final item;
   final rowNm;
   final GestureTapCallback? onTap;
+  final Function(OrderMenuModel, String)? onQuantityChanged;
 
   const OrderItemList(
-      {required this.item, required this.rowNm, this.onTap, Key? key})
+      {required this.item,
+      required this.rowNm,
+      this.onTap,
+      this.onQuantityChanged,
+      Key? key})
       : super(key: key);
 
   @override
@@ -563,14 +590,64 @@ class OrderItemList extends StatelessWidget {
                           fontSize: 16,
                           color: Color.fromRGBO(70, 88, 134, 1),
                           fontWeight: FontWeight.bold)),
-                  Container(
-                    width: 30,
-                    alignment: Alignment.centerRight,
-                    child: Text(item.quantity,
-                        style: TextStyle(
-                            fontSize: globals.isWideScreen ? 20 : 16,
-                            color: Color.fromRGBO(70, 88, 134, 1),
-                            fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () async {
+                      if (onQuantityChanged == null) return;
+
+                      String selQuantity = item.quantity;
+                      final value = await showDialog<String>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('数量を変更'),
+                          content: SizedBox(
+                            height: 90,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 12),
+                                DropDownNumberSelect(
+                                  value: selQuantity,
+                                  max: 50,
+                                  tapFunc: (v) {
+                                    selQuantity = v;
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text("確定"),
+                              onPressed: () =>
+                                  Navigator.of(context).pop(selQuantity),
+                            ),
+                            TextButton(
+                              child: const Text("キャンセル"),
+                              onPressed: () => Navigator.of(context).pop(null),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (value != null && value != item.quantity) {
+                        // Call the callback to update the quantity
+                        onQuantityChanged!(item, value);
+                      }
+                    },
+                    child: Container(
+                      width: 60,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(item.quantity,
+                          style: TextStyle(
+                              fontSize: globals.isWideScreen ? 20 : 16,
+                              color: Color.fromRGBO(70, 88, 134, 1),
+                              fontWeight: FontWeight.bold)),
+                    ),
                   ),
                 ],
               ),
