@@ -152,6 +152,8 @@ String constCheckinTypeOnlyReserve = '2';
 
 String constCheckinReserveRiRa = '0';
 String constCheckinReserveShift = '1';
+String constCheckinQROn = 'On';
+String constCheckinQROff = 'Off';
 
 var primaryColor = const Color(0xff117fc1);
 var redColor = const Color(0xffee385a);

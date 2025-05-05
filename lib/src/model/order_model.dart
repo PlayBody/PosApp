@@ -11,6 +11,7 @@ class OrderModel {
   final String userInputName;
   final String seatno;
   final int amount;
+  final String userCount;
   final String status;
   final String fromTime;
   final String toTime;
@@ -32,6 +33,7 @@ class OrderModel {
     required this.fromTime,
     required this.toTime,
     required this.amount,
+    required this.userCount,
     required this.flowTime,
     this.payMethod,
     required this.menus,
@@ -55,6 +57,7 @@ class OrderModel {
         staffName: json['staff_name'] ?? '',
         userName: json['user_name'] ?? '',
         userInputName: json['user_input_name'] ?? '',
+        userCount: json['user_count'] == null ? '0' : json['user_count'].toString(),
         seatno: json['table_position'].toString(),
         status: json['status'].toString(),
         fromTime: json['from_time'] == null ? '' : json['from_time'].toString(),

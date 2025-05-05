@@ -6,6 +6,7 @@ class OrganModel {
   final String organName;
   final String isNoReserve;
   final String isNoReserveType;
+  final String isNoReserveQR;
   final String organNumber;
   final String organSetNum;
   final bool isUseSet;
@@ -55,6 +56,7 @@ class OrganModel {
     required this.organName,
     required this.isNoReserve,
     required this.isNoReserveType,
+    required this.isNoReserveQR,
     required this.organNumber,
     required this.isUseSet,
     required this.organSetNum,
@@ -110,6 +112,9 @@ class OrganModel {
         isNoReserveType: json['is_no_reserve_type'] == null
             ? constCheckinReserveRiRa
             : json['is_no_reserve_type'].toString(),
+        isNoReserveQR: json['is_no_reserve_qr'] == null
+            ? constCheckinQROn
+            : json['is_no_reserve_qr'].toString(),
         organNumber: json['organ_number'] ?? '',
         organSetNum: json['set_number'] ?? '1',
         isUseSet:

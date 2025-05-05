@@ -347,7 +347,7 @@ class PosPrinters {
     _socket.add(generator.row([
       PosColumn(
           textEncoded: encodeToJapanese(
-              '${DateFormat('y年M月d日').format(DateTime.now())}(${weekAry.elementAt(DateTime.now().weekday)})'),
+              '${DateFormat('y年M月d日').format(DateTime.now())}(${weekAry.elementAt(DateTime.now().weekday - 1)})'),
           width: 8),
       PosColumn(
           text: DateFormat('HH:mm:ss').format(DateTime.now()),
@@ -362,7 +362,7 @@ class PosPrinters {
           textEncoded: encodeToJapanese('席：${printData['position']}'),
           width: 8),
       PosColumn(
-          textEncoded: encodeToJapanese(printData['person_cnt'] + '名'),
+          textEncoded: encodeToJapanese(printData['user_count'] + '名'),
           width: 4,
           styles: const PosStyles(align: PosAlign.right)),
     ]));
