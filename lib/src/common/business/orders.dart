@@ -169,6 +169,14 @@ class ClOrder {
     return results['isDelete'];
   }
 
+  Future<bool> changeQuantityOrderMenu(context, orderMenuId, quantity) async {
+    Map<dynamic, dynamic> results = {};
+    await Webservice().loadHttp(context, apiChangeQuantityOrderMenu,
+        {'order_menu_id': orderMenuId, 'quantity': quantity}).then((v) => {results = v});
+
+    return results['isUpdate'] ?? false;
+  }
+
   Future<String> loadTableTitle(context, organId, position) async {
     Map<dynamic, dynamic> results = {};
     await Webservice().loadHttp(context, apiLoadTableTitle, {

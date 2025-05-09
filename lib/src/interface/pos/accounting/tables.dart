@@ -55,7 +55,7 @@ class _Tables extends State<Tables> {
     currentRequestTableList = [];
     currentRequestTableList = await ClOrder().loadCureentRequestTables(context, globals.organId, globals.staffId);
     for(var item in currentRequestTableList) {
-      if (item.userName != '') {
+      if (item.userName != '' && mounted) {
         showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
@@ -76,7 +76,9 @@ class _Tables extends State<Tables> {
         );
       }
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return tableList;
   }
 

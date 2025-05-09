@@ -57,6 +57,13 @@ class DropDownNumberSelect extends StatelessWidget {
         itemList.add('+$i');
       }
     }
+    
+    // Check if the provided value exists in the item list to prevent the error
+    String? selectedValue = value;
+    if (selectedValue != null && !itemList.contains(selectedValue) && 
+        !(isAddNull != null && isAddNull! && selectedValue == null)) {
+      selectedValue = null;
+    }
 
     return DropdownButtonFormField(
       isExpanded: true,
@@ -85,7 +92,7 @@ class DropDownNumberSelect extends StatelessWidget {
         ),
         contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(8, 6, 0, 6),
       ),
-      value: value,
+      value: selectedValue,
       items: [
         if (isAddNull != null && isAddNull!)
           const DropdownMenuItem(
@@ -124,6 +131,23 @@ class DropDownModelSelect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if value exists in items to prevent the "exactly one item" error
+    dynamic selectedValue = value;
+    bool valueExists = false;
+    
+    if (selectedValue != null) {
+      for (var item in items) {
+        if (item.value == selectedValue) {
+          valueExists = true;
+          break;
+        }
+      }
+      
+      if (!valueExists) {
+        selectedValue = null;
+      }
+    }
+    
     return DropdownButtonFormField(
       key: dropdownState,
       isExpanded: true,
@@ -154,7 +178,7 @@ class DropDownModelSelect extends StatelessWidget {
             ? EdgeInsets.fromLTRB(8, 6, 0, 6)
             : contentPadding,
       ),
-      value: value,
+      value: selectedValue,
       items: items,
       onChanged: tapFunc,
     );

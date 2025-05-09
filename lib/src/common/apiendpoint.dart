@@ -1,7 +1,7 @@
 String apiBase = 'https://silverfeathers.net';
 String apiNewBase = 'https://silverfeathers.net/apis';
-//String apiBase = 'http://192.168.145.209/cloud_devotion';
-//String apiNewBase = 'http://192.168.145.209/cloud_devotion/apis';
+// String apiBase = 'http://192.168.132.64:8081';
+// String apiNewBase = 'http://192.168.132.64:8081/apis';
 
 String apiMaster = '$apiBase/apis/master';
 
@@ -209,6 +209,7 @@ String apiRejectOrder = '$apiBase/apiorders/rejectOrder';
 String apiSaveOrderMenus = '$apiBase/apiorders/saveOrderMenus';
 String apiDeleteOrder = '$apiBase/apiorders/deleteOrder';
 String apiDeleteOrderMenu = '$apiBase/apiorders/deleteOrderMenu';
+String apiChangeQuantityOrderMenu = '$apiBase/apiorders/changeQuantityOrderMenu';
 
 String apiLoadMasterPointSpecialPeriodSetting =
     '$apiBase/apis/master/point/getSpecialPeriodRatesByOrgan';

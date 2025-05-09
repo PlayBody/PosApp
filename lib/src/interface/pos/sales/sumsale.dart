@@ -58,13 +58,17 @@ class _SumSale extends State<SumSale> {
     _toDay = 31;
 
     Map<dynamic, dynamic> results = {};
-    await Webservice().loadHttp(context, apiLoadSumSalesUrl, {
-      'organ_id': organId,
-      'select_year': _selectYear.toString(),
-      'select_month': _selectMonth.toString(),
-      'from_day': _fromDay.toString(),
-      'to_day': _toDay.toString()
-    }).then((v) => {results = v});
+    if (mounted) {
+      await Webservice().loadHttp(context, apiLoadSumSalesUrl, {
+        'organ_id': organId,
+        'select_year': _selectYear.toString(),
+        'select_month': _selectMonth.toString(),
+        'from_day': _fromDay.toString(),
+        'to_day': _toDay.toString()
+      }).then((v) => {results = v});
+    } else {
+      return [];
+    }
 
     graphSaleData = [];
     tableSaleData = [];
@@ -80,7 +84,9 @@ class _SumSale extends State<SumSale> {
     }
     chartWidth = graphSaleData.length * 40 + 250;
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return graphSaleData;
   }
 
@@ -117,6 +123,8 @@ class _SumSale extends State<SumSale> {
   Future<void> initView() async {
     Map<dynamic, dynamic> results = {};
 
+    if (!mounted) return;
+    
     await Webservice().loadHttp(context, apiLoadSumSalesUrl, {
       'organ_id': organId,
       'select_year': _selectYear.toString(),
@@ -125,6 +133,8 @@ class _SumSale extends State<SumSale> {
       'to_day': _toDay.toString()
     }).then((v) => {results = v});
 
+    if (!mounted) return;
+    
     setState(() {
       graphSaleData = [];
       tableSaleData = [];
@@ -189,7 +199,9 @@ class _SumSale extends State<SumSale> {
       );
     }));
 
-    loadSumData();
+    if (mounted) {
+      loadSumData();
+    }
   }
 
   Widget _getOrganDropDown() {

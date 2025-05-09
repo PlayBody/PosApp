@@ -27,8 +27,8 @@ class SaleDetailModel {
       id: json['id'],
       startTime: '$thour:$tminute',
       position: json['table_position'].toString(),
-      amount: double.parse(json['amount'].toString()).toInt().toString(),
-      menuCount: json['menu_count'].toString(),
+      amount: json['amount'] == null ? '0' : double.parse(json['amount'].toString()).toInt().toString(),
+      menuCount: json['menu_count'] == null ? '0' : json['menu_count'].toString(),
       tablePoistion: json['table_position'].toString(),
       personCount: json['user_count'] ?? '',
     );

@@ -114,6 +114,7 @@ class _OrganSetting extends State<OrganSetting> {
 
   String checkInType = constCheckinTypeNone;
   String checkInTypeReserve = constCheckinReserveRiRa;
+  String checkInQR = constCheckinQROn;
 
   @override
   void initState() {
@@ -170,11 +171,14 @@ class _OrganSetting extends State<OrganSetting> {
     isServieTax = organ.isServiceTax;
     isRoundAmount = organ.isRoundAmount;
     txtEparkIdController.text = organ.eparkId;
-    if (organ.serviceTax != null )serviceTax = organ.serviceTax!;
+    if (organ.serviceTax != null) serviceTax = organ.serviceTax!;
 
     isUseSet = organ.isUseSet;
     checkInType = organ.isNoReserve;
     checkInTypeReserve = organ.isNoReserveType;
+    checkInQR = organ.isNoReserveQR == constCheckinQROff
+        ? constCheckinQROff
+        : constCheckinQROn;
 
     printLogoUrl = organ.printLogoUrl;
     organImage = organ.organImage;
@@ -236,7 +240,7 @@ class _OrganSetting extends State<OrganSetting> {
     }
 
     Map<dynamic, dynamic> results = {};
-    
+
     await Webservice().loadHttp(context, apiSaveSettingUrl, {
       'organ_id': selOrganId,
       'table_count': selTableCount == null ? '' : selTableCount,
@@ -244,8 +248,11 @@ class _OrganSetting extends State<OrganSetting> {
       'is_use_set': isUseSet ? '1' : '0',
       'is_no_reserve': checkInType,
       'is_no_reserve_type': checkInTypeReserve,
+      'is_no_reserve_qr': checkInQR,
       'set_time': _setTime == null ? '' : Funcs().getTimeFormatHMM00(_setTime),
-      'set_start_time': _setStartTime == null ? '' : Funcs().getTimeFormatHMM00(_setStartTime),
+      'set_start_time': _setStartTime == null
+          ? ''
+          : Funcs().getTimeFormatHMM00(_setStartTime),
       'set_amount': txtSetAmountController.text,
       'table_amount': txtTableAmountController.text,
       'active_start_time': _activeStartTime == null
@@ -277,10 +284,10 @@ class _OrganSetting extends State<OrganSetting> {
       'entering_3_point': txtPtEndtering3Controller.text,
       'entering_4_point': txtPtEndtering4Controller.text,
       'entering_5_point': txtPtEndtering5Controller.text,
-      'service_tax' : serviceTax,
-      'is_service_tax' : isServieTax,
-      'is_round_amount' : isRoundAmount,
-      'epark_id' : txtEparkIdController.text,
+      'service_tax': serviceTax,
+      'is_service_tax': isServieTax,
+      'is_round_amount': isRoundAmount,
+      'epark_id': txtEparkIdController.text,
       // 'business_weight': txtBusinessWeightController.text,
       // 'divide_point': txtDividePointController.text,
       // 'promotional_point': txtPromotionalPointController.text,
@@ -306,7 +313,7 @@ class _OrganSetting extends State<OrganSetting> {
   Future<void> updateTitle(
       String organId, String companyId, String _title) async {
     Navigator.of(context).pop();
-    if (organId=='' && companyId=='') return;
+    if (organId == '' && companyId == '') return;
     if (_title == '') return;
 
     Dialogs().loaderDialogNormal(context);
@@ -451,14 +458,14 @@ class _OrganSetting extends State<OrganSetting> {
                 _getOrganList(),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child:RowLabelInput(
-                    label: 'EPARK ID',
-                    labelPadding: 4,
-                    renderWidget: TextInputNormal(
-                      controller: txtEparkIdController,
-                    ),
-                  )),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: RowLabelInput(
+                      label: 'EPARK ID',
+                      labelPadding: 4,
+                      renderWidget: TextInputNormal(
+                        controller: txtEparkIdController,
+                      ),
+                    )),
                 const SizedBox(height: 12),
                 _getPositionCountContent(),
                 const SizedBox(height: 12),
@@ -870,83 +877,107 @@ class _OrganSetting extends State<OrganSetting> {
                 ],
               )),
           // if (checkInType == constCheckinTypeOnlyReserve)
-            RowLabelInput(
-                label: '',
-                renderWidget: Row(
-                  children: [
-                    RadioNomal(
-                      label: '出勤スタッフ',
-                      value: constCheckinReserveRiRa,
-                      groupValue: checkInTypeReserve,
-                      tapFunc: () => setState(() {
-                        checkInTypeReserve = constCheckinReserveRiRa;
-                      }),
-                    ),
-                    const SizedBox(width: 4),
-                    RadioNomal(
-                      label: 'シフト枠',
-                      value: constCheckinReserveShift,
-                      groupValue: checkInTypeReserve,
-                      tapFunc: () => setState(() {
-                        checkInTypeReserve = constCheckinReserveShift;
-                      }),
-                    ),
-                  ],
-                )),
-            RowLabelInput(
-                label: 'サービス料',
-                renderWidget: Row(
-                  children: [
-                    RadioNomal(
-                      label: 'オン',
-                      value: '1',
-                      groupValue: isServieTax,
-                      tapFunc: () => setState(() {
-                        isServieTax = '1';
-                      }),
-                    ),
-                    const SizedBox(width: 4),
-                    RadioNomal(
-                      label: 'オフ',
-                      value: '0',
-                      groupValue: isServieTax,
-                      tapFunc: () => setState(() {
-                        isServieTax = '0';
-                      }),
-                    ),
-                    Flexible(
-                        child: DropDownNumberSelect(
-                          value: serviceTax,
-                          min: 0,
-                          max: 50,
-                          tapFunc: (v) => {serviceTax = v},
-                        )),
-                    const Text(' %'),
-                  ],
-                )),
-            RowLabelInput(
-                label: '四捨五入',
-                renderWidget: Row(
-                  children: [
-                    RadioNomal(
-                      label: 'オン',
-                      value: '1',
-                      groupValue: isRoundAmount,
-                      tapFunc: () => setState(() {
-                        isRoundAmount = '1';
-                      }),
-                    ),
-                    const SizedBox(width: 4),
-                    RadioNomal(
-                      label: 'オフ',
-                      value: '0',
-                      groupValue: isRoundAmount,
-                      tapFunc: () => setState(() {
-                        isRoundAmount = '0';
-                      }),
-                    )
-                  ],
-                )),
+          RowLabelInput(
+              label: '',
+              renderWidget: Row(
+                children: [
+                  RadioNomal(
+                    label: '出勤スタッフ',
+                    value: constCheckinReserveRiRa,
+                    groupValue: checkInTypeReserve,
+                    tapFunc: () => setState(() {
+                      checkInTypeReserve = constCheckinReserveRiRa;
+                    }),
+                  ),
+                  const SizedBox(width: 4),
+                  RadioNomal(
+                    label: 'シフト枠',
+                    value: constCheckinReserveShift,
+                    groupValue: checkInTypeReserve,
+                    tapFunc: () => setState(() {
+                      checkInTypeReserve = constCheckinReserveShift;
+                    }),
+                  ),
+                ],
+              )),
+          _getRowHeight(),
+          RowLabelInput(
+              label: '',
+              renderWidget: Row(
+                children: [
+                  RadioNomal(
+                    label: 'QR On',
+                    value: constCheckinQROn,
+                    groupValue: checkInQR,
+                    tapFunc: () => setState(() {
+                      checkInQR = constCheckinQROn;
+                    }),
+                  ),
+                  const SizedBox(width: 4),
+                  RadioNomal(
+                    label: 'QR Off',
+                    value: constCheckinQROff,
+                    groupValue: checkInQR,
+                    tapFunc: () => setState(() {
+                      checkInQR = constCheckinQROff;
+                    }),
+                  ),
+                ],
+              )),
+          RowLabelInput(
+              label: 'サービス料',
+              renderWidget: Row(
+                children: [
+                  RadioNomal(
+                    label: 'オン',
+                    value: '1',
+                    groupValue: isServieTax,
+                    tapFunc: () => setState(() {
+                      isServieTax = '1';
+                    }),
+                  ),
+                  const SizedBox(width: 4),
+                  RadioNomal(
+                    label: 'オフ',
+                    value: '0',
+                    groupValue: isServieTax,
+                    tapFunc: () => setState(() {
+                      isServieTax = '0';
+                    }),
+                  ),
+                  Flexible(
+                      child: DropDownNumberSelect(
+                    value: serviceTax,
+                    min: 0,
+                    max: 50,
+                    tapFunc: (v) => {serviceTax = v},
+                  )),
+                  const Text(' %'),
+                ],
+              )),
+          RowLabelInput(
+              label: '四捨五入',
+              renderWidget: Row(
+                children: [
+                  RadioNomal(
+                    label: 'オン',
+                    value: '1',
+                    groupValue: isRoundAmount,
+                    tapFunc: () => setState(() {
+                      isRoundAmount = '1';
+                    }),
+                  ),
+                  const SizedBox(width: 4),
+                  RadioNomal(
+                    label: 'オフ',
+                    value: '0',
+                    groupValue: isRoundAmount,
+                    tapFunc: () => setState(() {
+                      isRoundAmount = '0';
+                    }),
+                  )
+                ],
+              )),
           RowLabelInput(
               label: '備考 ',
               labelPadding: 4,

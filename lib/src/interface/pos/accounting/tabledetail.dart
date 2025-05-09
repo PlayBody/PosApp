@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:staff_pos_app/src/common/business/orders.dart';
+import 'package:staff_pos_app/src/common/business/organ.dart';
+import 'package:staff_pos_app/src/model/organmodel.dart';
 
 import 'package:staff_pos_app/src/common/const.dart';
 import 'package:staff_pos_app/src/common/dialogs.dart';
@@ -21,6 +23,8 @@ import 'package:staff_pos_app/src/model/order_menu_model.dart';
 import 'package:staff_pos_app/src/model/order_model.dart';
 import '../../../common/apiendpoint.dart';
 import '../../../common/globals.dart' as globals;
+import 'package:staff_pos_app/src/interface/components/dropdowns.dart';
+import 'package:staff_pos_app/src/interface/components/form_widgets.dart';
 
 class TableDetail extends StatefulWidget {
   final String orderId;
@@ -42,13 +46,15 @@ class _TableDetail extends State<TableDetail> {
   String tableStartTime = '';
   String flowTime = '';
   String amount = '';
+  String userCount = '1';
+  String setNum = '1';
+  bool isUseSet = false;
   String inputDateTime = "";
   String userName = '';
   String userId = '';
 
   String tableStatus = constOrderStatusNone;
   String tablePosition = '0';
-  String tablePersonCnt = '0';
   String tableAmount = '0';
   String setAmount = '0';
   String btnActionText = '';
@@ -87,7 +93,7 @@ class _TableDetail extends State<TableDetail> {
     }));
   }
 
-  Future<void> psuhOrder() async {
+  Future<void> pushOrder() async {
     if (orderId == null) return;
     await Navigator.push(context, MaterialPageRoute(builder: (_) {
       return Order(
@@ -115,6 +121,7 @@ class _TableDetail extends State<TableDetail> {
       flowTime = (flowH < 10 ? '0' : '') + flowH.toString() + ' 時間  ';
       flowTime += (flowM < 10 ? '0' : '') + flowM.toString() + ' 分';
       amount = _order.amount.toString();
+      userCount = _order.userCount.toString();
       tableStatus = _order.status;
       userName = _order.userInputName;
       userId = _order.userId;
@@ -158,7 +165,7 @@ class _TableDetail extends State<TableDetail> {
       Dialogs().loaderDialogNormal(context);
       dynamic printData = {
         'position': tablePosition,
-        'person_cnt': tablePersonCnt,
+        'user_count': userCount,
         'menus': menuList,
         'amount': amount,
         'table_amount': tableAmount,
@@ -199,6 +206,13 @@ class _TableDetail extends State<TableDetail> {
         Dialogs().infoDialog(context, '操作が失敗しました。');
       }
     }
+  }
+
+  Future<void> changeQuantityOrderMenu(String? _id, String? _quantity) async {
+    if (_id == null || _quantity == null) return;
+    bool isUpdate =
+        await ClOrder().changeQuantityOrderMenu(context, _id, _quantity);
+    if (isUpdate) refreshLoad();
   }
 
   void titleChangeDialog(String txtInputTitle) {
@@ -262,14 +276,114 @@ class _TableDetail extends State<TableDetail> {
   }
 
   Future<void> enteringOrgan() async {
-    orderId = await Navigator.push(context, MaterialPageRoute(builder: (_) {
-      return DlgEntering(
-        userId: reserveUserId,
-        orderId: orderId,
-        tablePosition: widget.tablePosition,
-      );
-    }));
+    OrganModel organ = await ClOrgan().loadOrganInfo(context, globals.organId);
+    if (organ.isNoReserveQR == constCheckinQROn) {
+      orderId = await Navigator.push(context, MaterialPageRoute(builder: (_) {
+        return DlgEntering(
+          userId: reserveUserId,
+          orderId: orderId,
+          tablePosition: widget.tablePosition,
+        );
+      }));
+    } else {
+      String confString = await enteringDialog(
+          reserveUserId != null ? qEnteringOrgan : qEnteringOrgan);
+      if (confString == '1') {
+        await createOrder('1');
+      } else if (confString == '3') {
+        await ClOrder().rejectOrder(context, globals.organId, '1');
+      }
+    }
     refreshLoad();
+    // if (mounted) setState(() {});
+  }
+
+  Future<String> enteringDialog(String message) async {
+    isUseSet = await ClOrgan().isUseSetInTable(context, globals.organId);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Container(
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(message),
+              ),
+              if (isUseSet)
+                RowLabelInput(
+                    label: 'セット設定',
+                    renderWidget: DropDownNumberSelect(
+                      value: setNum,
+                      max: 5,
+                      tapFunc: (v) {
+                        setState(() {
+                          setNum = v;
+                        });
+                      },
+                    )),
+              SizedBox(height: 8),
+              if (isUseSet)
+                RowLabelInput(
+                    label: '性別',
+                    renderWidget: DropDownModelSelect(
+                      value: '1',
+                      items: [
+                        DropdownMenuItem(child: Text('男'),value: '1',),
+                        DropdownMenuItem(child: Text('女'), value: '2'),
+                      ],
+                      tapFunc: (v) {
+                        setState(() {
+                          setNum = v;
+                        });
+                      },
+                    )),
+              SizedBox(height: 8),
+              RowLabelInput(
+                  label: '人数',
+                  renderWidget: DropDownNumberSelect(
+                    value: userCount,
+                    max: 99,
+                    tapFunc: (v) {
+                      setState(() {
+                        userCount = v.toString();
+                      });
+                    },
+                  )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('はい'),
+            onPressed: () => Navigator.of(context).pop('1'),
+          ),
+          TextButton(
+            child: const Text('いいえ'),
+            onPressed: () => Navigator.of(context).pop('2'),
+          ),
+        ],
+      ),
+    );
+
+    return value == null ? '2' : value;
+  }
+
+  Future<bool> createOrder(userId) async {
+    String _orderId = await ClOrder().addOrder(context, {
+      'organ_id': globals.organId,
+      'table_position': widget.tablePosition,
+      'user_id': userId,
+      'staff_id': globals.staffId,
+      'user_count': userCount,
+      'set_number': isUseSet ? setNum : '',
+      'status': constOrderStatusTableStart
+    });
+    if (_orderId != '') {
+      orderId = _orderId;
+      return true;
+    }
+    return false;
   }
 
   Future<void> updateOrderUserName(userName) async {
@@ -278,6 +392,18 @@ class _TableDetail extends State<TableDetail> {
         {'id': orderId, 'user_input_name': userName});
     await loadTableDetail();
     Navigator.pop(context);
+  }
+
+  Future<void> updateUserCount(String count) async {
+    if (orderId == null) return;
+    Dialogs().loaderDialogNormal(context);
+    bool success = await ClOrder().updateOrder(
+        context, {'reserve_id': orderId, 'user_count': count});
+    await loadTableDetail();
+    Navigator.pop(context);
+    if (!success) {
+      Dialogs().infoDialog(context, '人数の更新に失敗しました');
+    }
   }
 
   Future<void> refreshLoad() async {
@@ -334,6 +460,12 @@ class _TableDetail extends State<TableDetail> {
                                                   rowNm: menuList.indexOf(e),
                                                   onTap: () =>
                                                       deleteTableMenu(e.id!),
+                                                  onQuantityChanged:
+                                                      (OrderMenuModel item,
+                                                          String newQuantity) {
+                                                    changeQuantityOrderMenu(
+                                                        e.id!, newQuantity);
+                                                  },
                                                 )),
                                           ],
                                         ),
@@ -382,7 +514,7 @@ class _TableDetail extends State<TableDetail> {
                                         child: Text('注 文'),
                                         onPressed: tableStatus ==
                                                 constOrderStatusTableStart //status == '0'
-                                            ? () => psuhOrder()
+                                            ? () => pushOrder()
                                             : null,
                                         style: ElevatedButton.styleFrom(
                                             backgroundColor:
@@ -427,6 +559,14 @@ class _TableDetail extends State<TableDetail> {
                                                   rowNm: menuList.indexOf(e),
                                                   onTap: () =>
                                                       deleteTableMenu(e.id!),
+                                                  onQuantityChanged:
+                                                      (OrderMenuModel item,
+                                                          String newQuantity) {
+                                                    print(
+                                                        'newQuantity: $newQuantity, ${e.id}');
+                                                    changeQuantityOrderMenu(
+                                                        e.id!, newQuantity);
+                                                  },
                                                 )),
                                           ],
                                         ),
@@ -477,7 +617,7 @@ class _TableDetail extends State<TableDetail> {
                                         child: Text('注 文'),
                                         onPressed: tableStatus ==
                                                 constOrderStatusTableStart //status == '0'
-                                            ? () => psuhOrder()
+                                            ? () => pushOrder()
                                             : null,
                                         style: ElevatedButton.styleFrom(
                                             backgroundColor:
@@ -697,9 +837,44 @@ class _TableDetail extends State<TableDetail> {
                   child: IconWhiteButton(
                       icon: Icons.refresh, tapFunc: () => refreshLoad()))
             ])),
-        if (orderId != null)
+            // here the user count show logic.
+        if (orderId != null && orderId != '')
           Container(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+              padding: globals.isWideScreen
+                  ? EdgeInsets.only(
+                      left: orientation == Orientation.portrait ? 40 : 150,
+                      right: orientation == Orientation.portrait ? 40 : 150,
+                      top: 20)
+                  : EdgeInsets.only(left: 20, right: 20, top: 12),
+              child: Row(children: [
+                Expanded(
+                    child: Text('人数', style: tableDetailhedaerLabelTextStyle)),
+                GestureDetector(
+                  onTap: () {
+                    _showUserCountEditDialog(context);
+                  },
+                  child: Container(
+                    child: Row(
+                      children: [
+                        Text(
+                          userCount + ' 名',
+                          style: tableDetailTimeStyle,
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.edit, color: Colors.grey, size: 20)
+                      ],
+                    ),
+                  ),
+                )
+              ])),
+        if (orderId != null && orderId != '')
+          Container(
+              padding: globals.isWideScreen
+                  ? EdgeInsets.only(
+                      left: orientation == Orientation.portrait ? 40 : 150,
+                      right: orientation == Orientation.portrait ? 40 : 150,
+                      top: 20)
+                  : EdgeInsets.only(left: 20, right: 20, top: 12),
               child: WhiteButton(
                 label: '削除',
                 tapFunc: () async {
@@ -722,15 +897,74 @@ class _TableDetail extends State<TableDetail> {
         child: Text(str,
             style: isTime ? tableDetailTimeStyle : tableDetailTimeLabel));
   }
+
+  void _showUserCountEditDialog(BuildContext context) {
+    // Store current value for reverting if needed
+    String tempCount = userCount;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('人数を変更'),
+          content: Container(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('人数を選択してください',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 20),
+                DropDownNumberSelect(
+                  value: tempCount,
+                  max: 99,
+                  hint: '人数を選択',
+                  label: ' 名',
+                  tapFunc: (value) {
+                    tempCount = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('保存'),
+              onPressed: () {
+                if (tempCount != '0') {
+                  userCount = tempCount;
+                  updateUserCount(userCount);
+                  Navigator.of(context).pop();
+                } else {
+                  Dialogs().infoDialog(context, '人数を入力してください');
+                }
+              },
+            ),
+            TextButton(
+              child: const Text('キャンセル'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class TableDetailItemList extends StatelessWidget {
   final item;
   final rowNm;
   final GestureTapCallback? onTap;
+  final Function(OrderMenuModel, String)? onQuantityChanged;
 
   const TableDetailItemList(
-      {required this.item, required this.rowNm, this.onTap, Key? key})
+      {required this.item,
+      required this.rowNm,
+      this.onTap,
+      this.onQuantityChanged,
+      Key? key})
       : super(key: key);
 
   @override
@@ -746,7 +980,7 @@ class TableDetailItemList extends StatelessWidget {
                 // padding: EdgeInsets.only(top: 12),
                 // width: 180,
                 child: Container(
-              padding: EdgeInsets.only(top: 8, bottom: 8),
+              padding: EdgeInsets.only(top: 8, bottom: 0),
               child: Row(
                 children: [
                   Expanded(
@@ -762,14 +996,20 @@ class TableDetailItemList extends StatelessWidget {
                           fontSize: globals.isWideScreen ? 20 : 16,
                           color: Color.fromRGBO(70, 88, 134, 1),
                           fontWeight: FontWeight.bold)),
-                  Container(
-                    width: 30,
-                    alignment: Alignment.centerRight,
-                    child: Text(item.quantity,
-                        style: TextStyle(
-                            fontSize: globals.isWideScreen ? 20 : 16,
-                            color: Color.fromRGBO(70, 88, 134, 1),
-                            fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      _showQuantityDialog(context, item);
+                    },
+                    child: Container(
+                      width: 30,
+                      alignment: Alignment.centerRight,
+                      child: Text(item.quantity,
+                          style: TextStyle(
+                              fontSize: globals.isWideScreen ? 20 : 16,
+                              color: Color.fromRGBO(70, 88, 134, 1),
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline)),
+                    ),
                   ),
                 ],
               ),
@@ -793,6 +1033,60 @@ class TableDetailItemList extends StatelessWidget {
             ),
           ],
         ));
+  }
+
+  void _showQuantityDialog(BuildContext context, OrderMenuModel item) {
+    String quantity = item.quantity;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('数量変更'),
+          content: Container(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(item.menuTitle,
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 20),
+                DropDownNumberSelect(
+                  value: quantity,
+                  max: 50,
+                  hint: '数量を選択',
+                  tapFunc: (value) {
+                    quantity = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('保存'),
+              onPressed: () {
+                if (onQuantityChanged != null &&
+                    quantity != item.quantity &&
+                    quantity != '0') {
+                  onQuantityChanged!(item, quantity);
+                  Navigator.of(context).pop();
+                } else {
+                  Dialogs().infoDialog(context, '数量を入力してください');
+                }
+              },
+            ),
+            TextButton(
+              child: const Text('キャンセル'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
