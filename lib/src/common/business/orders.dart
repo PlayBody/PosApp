@@ -90,7 +90,7 @@ class ClOrder {
 
     OrderModel? table;
 
-    if (results['isLoad']) {
+    if (results['isLoad'] ?? false) {
       table = OrderModel.fromJson(results['order']);
     }
     return table;
